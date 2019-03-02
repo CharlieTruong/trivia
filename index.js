@@ -1,4 +1,4 @@
-import axios from "axios";
+const axios = require("axios");
 
 const respond = (
   response,
@@ -30,12 +30,11 @@ exports.handler = async (event, context, callback) => {
         switch (name) {
           case "getQuestion":
             const questionResponse = await axios.get(
-              "http://jsservice.io/random"
+              "http://jservice.io/api/random"
             );
-            const question = questionResponse[0].data;
-            callback(null, respond("here is a question", question));
-            break;
-          case "answerQuestion":
+            const { answer, question } = questionResponse.data[0];
+            callback(null, respond(`${question}`, { answer, question }));
+            callback(null, respond("there was an error"));
             break;
           default:
             callback(null, respond(`Intent type is ${name}`));
@@ -44,6 +43,7 @@ exports.handler = async (event, context, callback) => {
         break;
     }
   } catch (e) {
+    console.log(e);
     callback(`Error: ${e}`);
   }
 };
