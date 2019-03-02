@@ -17,18 +17,21 @@ const respond = (
 });
 
 exports.handler = async (event, context, callback) => {
+  console.log(event);
   try {
     switch (event.request.type) {
-      case "LaunchRequest":
+      case "LaunchRequest": {
         callback(null, respond("Welcome to comic book trivia"));
         break;
-      case "SessionEndedRequest":
+      }
+      case "SessionEndedRequest": {
         callback(null, respond("See you next time"));
         break;
-      case "IntentRequest":
-        const { name } = event.request.intent;
+      }
+      case "IntentRequest": {
+        const { name, slots } = event.request.intent;
         switch (name) {
-          case "getQuestion":
+          case "getQuestion": {
             const questionResponse = await axios.get(
               "http://jservice.io/api/random"
             );
@@ -36,11 +39,23 @@ exports.handler = async (event, context, callback) => {
             callback(null, respond(`${question}`, { answer, question }));
             callback(null, respond("there was an error"));
             break;
-          default:
+          }
+          case "answerQuestion": {
+            const { answer } = event.session.attributes;
+            if (answer.toLowerCase() === slots.answer.value.toLowerCase()) {
+              callback(null, respond("that's correct. good job."));
+            } else {
+              callback(null, respond("sorry that was the wrong answer"));
+            }
+            break;
+          }
+          default: {
             callback(null, respond(`Intent type is ${name}`));
             break;
+          }
         }
         break;
+      }
     }
   } catch (e) {
     console.log(e);
