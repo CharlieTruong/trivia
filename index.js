@@ -17,7 +17,6 @@ const respond = (
 });
 
 exports.handler = async (event, context, callback) => {
-  console.log(event);
   try {
     switch (event.request.type) {
       case "LaunchRequest": {
@@ -31,27 +30,56 @@ exports.handler = async (event, context, callback) => {
       case "IntentRequest": {
         const { name, slots } = event.request.intent;
         switch (name) {
+          case "AMAZON.YesIntent":
           case "getQuestion": {
+            let answered = false;
+            if (event.session.attributes) {
+              answered = event.session.attributes.answered;
+            }
+            if (name == "AMAZON.YesIntent" && !answered) {
+              return;
+            }
+
             const questionResponse = await axios.get(
               "http://jservice.io/api/random"
             );
-            const { answer, question } = questionResponse.data[0];
-            callback(null, respond(`${question}`, { answer, question }));
-            callback(null, respond("there was an error"));
+            const { answer, category, question } = questionResponse.data[0];
+            const questionText = `In the category "${
+              category.title
+            }", ${question}`;
+            callback(
+              null,
+              respond(questionText, { answer, category, question })
+            );
             break;
           }
           case "answerQuestion": {
             const { answer } = event.session.attributes;
             if (answer.toLowerCase() === slots.answer.value.toLowerCase()) {
-              callback(null, respond("that's correct. good job."));
+              callback(
+                null,
+                respond("that's correct. would you like another question?", {
+                  answered: true
+                })
+              );
             } else {
-              callback(null, respond("sorry that was the wrong answer"));
+              callback(
+                null,
+                respond("that's wrong. would you like another question?", {
+                  answered: true
+                })
+              );
             }
             break;
           }
-          default: {
-            callback(null, respond(`Intent type is ${name}`));
-            break;
+          case "AMAZON.NoIntent": {
+            if (
+              event.session.attributes &&
+              !event.session.attributes.answered
+            ) {
+              return;
+            }
+            callback(null, respond("It was fun playing", {}, true));
           }
         }
         break;
@@ -59,6 +87,6 @@ exports.handler = async (event, context, callback) => {
     }
   } catch (e) {
     console.log(e);
-    callback(`Error: ${e}`);
+    callback(`Error: ${e}`, respond("Something went wrong"));
   }
 };
