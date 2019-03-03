@@ -8,3 +8,4 @@ This defines an AWS lambda function to handle a simple trivia game as an Alexa s
 * Use DynamoDB to persist user scores
 * Use CloudFormation templates to update the Alexa Skill and Lambda function
 * Identify other trivia apis that may offer multiple choice answers
+* Identify solution to fuzzily match correct answers rather than needing to be exact
